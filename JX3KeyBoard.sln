@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JX3KeyBoard", "JX3KeyBoard\JX3KeyBoard.vcxproj", "{BE4D20E1-F7D4-4FB0-AB56-ED8DF2ADB1C4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE4D20E1-F7D4-4FB0-AB56-ED8DF2ADB1C4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BE4D20E1-F7D4-4FB0-AB56-ED8DF2ADB1C4}.Debug|Win32.Build.0 = Debug|Win32
+		{BE4D20E1-F7D4-4FB0-AB56-ED8DF2ADB1C4}.Release|Win32.ActiveCfg = Release|Win32
+		{BE4D20E1-F7D4-4FB0-AB56-ED8DF2ADB1C4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
