@@ -28,7 +28,7 @@ void ClickRunner::Run()
 	{
 		if (*m_stop_click == true)
 		{
-			Sleep(100);
+			Sleep(200);
 			continue;
 		}
 		if (*m_start_listen == false)
@@ -37,32 +37,45 @@ void ClickRunner::Run()
 		}
 		if (*m_pause_click == false)
 		{
-			for (int i = 0; i < m_key_arr->size(); i++)
+			if (m_press_index == -1)
 			{
-				CString cs = (*m_key_arr)[i];
+				for (int i = 0; i < m_key_arr->size(); i++)
+				{
+					CString cs = (*m_key_arr)[i];
+					DWORD key_code = winio_helper.GetKeyCode(cs);
+					if (key_code < 0)
+					{
+						continue;
+					}
+					winio_helper.KeyDownNormal(key_code);
+				}
+				for (int i = 0; i < m_key_arr->size(); i++)
+				{
+					CString cs = (*m_key_arr)[i];
+					DWORD key_code = winio_helper.GetKeyCode(cs);
+					if (key_code < 0)
+					{
+						continue;
+					}
+					winio_helper.KeyUpNormal(key_code);
+				}
+			}
+			else if (m_press_index > -1)
+			{
+				CString cs = (*m_key_arr)[m_press_index];
 				DWORD key_code = winio_helper.GetKeyCode(cs);
 				if (key_code < 0)
 				{
 					continue;
 				}
-				winio_helper.KeyDownNormal(key_code);
-
+				winio_helper.KeyDownUpNormal(key_code);
 			}
-			for (int i = 0; i < m_key_arr->size(); i++)
-			{
-				CString cs = (*m_key_arr)[i];
-				DWORD key_code = winio_helper.GetKeyCode(cs);
-				if (key_code < 0)
-				{
-					continue;
-				}
-				winio_helper.KeyUpNormal(key_code);
-			}
-			Sleep(100);
+			
+			Sleep(200);
 		}
 		else
 		{
-			Sleep(100);
+			Sleep(200);
 		}
 	}
 }

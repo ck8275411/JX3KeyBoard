@@ -56,7 +56,8 @@ void CJX3KeyBoardDlg::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Control(pDX, IDC_BUTTON1, m_button1);
 
-	
+	DDX_Control(pDX, IDC_RADIO1, m_radio_button_1);
+	DDX_Control(pDX, IDC_RADIO2, m_radio_button_2);
 }
 
 BEGIN_MESSAGE_MAP(CJX3KeyBoardDlg, CDialogEx)
@@ -111,11 +112,6 @@ BOOL CJX3KeyBoardDlg::OnInitDialog()
 	m_pause_click = false;
 	m_start_listen = false;
 
-	m_clicker1.m_pause_click = &m_pause_click;
-	m_clicker1.m_stop_click = &m_stop_click;
-	m_clicker1.m_start_listen = &m_start_listen;
-	m_clicker1.m_key_arr = &m_key_arr;
-
 	m_reciever.m_stop_click = &m_stop_click;
 	m_reciever.m_pause_click = &m_pause_click;
 	m_reciever.m_start_listen = &m_start_listen;
@@ -126,12 +122,29 @@ BOOL CJX3KeyBoardDlg::OnInitDialog()
 	m_app_path = tmp_char;
 	m_ini_path = m_app_path + "\\JX3KB.ini";
 
+	CString cs;
+	::GetPrivateProfileString("PressMode", "Value", "", tmp_char, 1024, m_ini_path);
+	cs = tmp_char;
+	if (cs == "各自循环")
+	{
+		m_press_mode = DIFFTIME;
+		m_radio_button_2.SetCheck(1);
+		m_radio_button_1.SetCheck(0);
+	}
+	else if (cs == "同时按键" || cs == "")
+	{
+		m_press_mode = SAMETIME;
+		m_radio_button_2.SetCheck(0);
+		m_radio_button_1.SetCheck(1);
+	}
+
 	GetIniSetKeyCode(m_edit1,m_checkbox1, 1);
 	GetIniSetKeyCode(m_edit2,m_checkbox2, 2);
 	GetIniSetKeyCode(m_edit3,m_checkbox3, 3);
 	GetIniSetKeyCode(m_edit4,m_checkbox4, 4);
 	GetIniSetKeyCode(m_edit5,m_checkbox5, 5);
 	GetIniSetKeyCode(m_edit6,m_checkbox6, 6);
+
 	if (!InitializeWinIo())
 	{
 		AfxMessageBox("Winio初始化失败!");
@@ -143,6 +156,27 @@ BOOL CJX3KeyBoardDlg::OnInitDialog()
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
+//初始化按键对象
+void CJX3KeyBoardDlg::InitClicker(ClickRunner* clicker, int index)
+{
+	clicker->m_pause_click = &m_pause_click;
+	clicker->m_stop_click = &m_stop_click;
+	clicker->m_start_listen = &m_start_listen;
+	clicker->m_key_arr = &m_key_arr;
+	clicker->m_press_index = index;
+}
+void CJX3KeyBoardDlg::DestroyClicker()
+{
+	for (int i = 0; i < m_clicker_arr.size(); i++)
+	{
+		if (m_clicker_arr[i] != nullptr)
+		{
+			delete m_clicker_arr[i];
+		}
+		m_clicker_arr[i] = nullptr;
+	}
+	m_clicker_arr.clear();
+}
 // 如果向对话框添加最小化按钮，则需要下面的代码
 //  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
 //  这将由框架自动完成。
@@ -183,6 +217,7 @@ void CJX3KeyBoardDlg::OnDestroy()
 {
 	ShutdownWinIo();
 	Shell_NotifyIcon(NIM_DELETE, &m_nid);
+	DestroyClicker();
 	CDialogEx::OnDestroy();
 	// TODO:  在此处添加消息处理程序代码
 }
@@ -201,7 +236,21 @@ void CJX3KeyBoardDlg::OnBnClickedButton1()
 		m_checkbox5.EnableWindow(0);
 		m_checkbox6.EnableWindow(0);
 		
+		if (m_radio_button_1.GetCheck())
+		{
+			m_press_mode = SAMETIME;
+			::WritePrivateProfileString("PressMode", "Value", "同时按键", m_ini_path);
+		}
+		else if (m_radio_button_2.GetCheck())
+		{
+			m_press_mode = DIFFTIME;
+			::WritePrivateProfileString("PressMode", "Value", "各自循环", m_ini_path);
+		}
+		m_radio_button_1.EnableWindow(0);
+		m_radio_button_2.EnableWindow(0);
+
 		m_key_arr.clear();
+		DestroyClicker();
 
 		GetKeyCodeSetIni(m_edit1, m_checkbox1, 1);
 		GetKeyCodeSetIni(m_edit2, m_checkbox2, 2);
@@ -213,8 +262,36 @@ void CJX3KeyBoardDlg::OnBnClickedButton1()
 		m_button1.SetWindowTextA("停止");
 		ShowWindow(SW_HIDE); // 当最小化市，隐藏主窗口 
 		m_start_listen = true;
-		AfxBeginThread(RecieveThread, (LPVOID)&m_reciever);
-		AfxBeginThread(ClickThread, (LPVOID)&m_clicker1);
+		switch (m_press_mode)
+		{
+		case SAMETIME:
+		{
+						 AfxBeginThread(RecieveThread, (LPVOID)&m_reciever);
+						 ClickRunner* clicker = new ClickRunner();
+						 InitClicker(clicker, -1);
+						 m_clicker_arr.push_back(clicker);
+						 AfxBeginThread(ClickThread, (LPVOID)m_clicker_arr[0]);
+						 break;
+		}
+		case DIFFTIME:
+		{
+						 AfxBeginThread(RecieveThread, (LPVOID)&m_reciever);
+						 for (int i = 0; i < m_key_arr.size(); i++)
+						 {
+							 ClickRunner* clicker = new ClickRunner();
+							 InitClicker(clicker, i);
+							 m_clicker_arr.push_back(clicker);
+							 AfxBeginThread(ClickThread, (LPVOID)m_clicker_arr[i]);
+						 }
+						 break;
+		}
+		default:
+		{
+				   AfxMessageBox("模式选择错误");
+				   break;
+		}
+		}
+		
 	}
 	else
 	{
@@ -225,6 +302,8 @@ void CJX3KeyBoardDlg::OnBnClickedButton1()
 		m_checkbox5.EnableWindow(1);
 		m_checkbox6.EnableWindow(1);
 
+		m_radio_button_1.EnableWindow(1);
+		m_radio_button_2.EnableWindow(1);
 		m_button1.SetWindowTextA("开始");
 		m_start_listen = false;
 	}
@@ -306,6 +385,8 @@ void CJX3KeyBoardDlg::GetKeyCodeSetIni(CMyEdit& edit, CMyCheckBox& checkbox, int
 	}
 	::WritePrivateProfileString(app_name, "Value", cs, m_ini_path);
 	::WritePrivateProfileString(app_name, "Interval", cs2, m_ini_path);
+
+
 }
 
 void CJX3KeyBoardDlg::GetIniSetKeyCode(CMyEdit& edit, CMyCheckBox& checkbox, int index)

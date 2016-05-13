@@ -13,6 +13,7 @@ public:
 	bool *m_pause_click;
 	bool *m_start_listen;
 	vector<CString>* m_key_arr;
+	int m_press_index;
 private:
 	WinioHelper winio_helper;
 };

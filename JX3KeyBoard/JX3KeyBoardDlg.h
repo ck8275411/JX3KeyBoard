@@ -12,6 +12,10 @@
 #include "RecieverRunner.h"
 #include "FloatDlg.h"
 
+enum PressMode{
+	SAMETIME = 1,
+	DIFFTIME = 2
+};
 // CJX3KeyBoardDlg 对话框
 class CJX3KeyBoardDlg : public CDialogEx
 {
@@ -41,6 +45,8 @@ protected:
 
 	void GetKeyCodeSetIni(CMyEdit& edit, CMyCheckBox& checkbox, int index);
 	void GetIniSetKeyCode(CMyEdit& edit, CMyCheckBox& checkbox, int index);
+	void InitClicker(ClickRunner* clicker, int index);
+	void DestroyClicker();
 private:
 	CMyCheckBox m_checkbox1;
 	CMyCheckBox m_checkbox2;
@@ -58,16 +64,17 @@ private:
 
 	//开始键
 	CButton m_button1;
-
+	//按键方案选择
+	CButton m_radio_button_1;
+	CButton m_radio_button_2;
+	PressMode m_press_mode;
 	//停止变量
 	bool m_stop_click;
 	//暂停变量
 	bool m_pause_click;
 	//开始监听键盘变量
 	bool m_start_listen;
-	ClickRunner m_clicker1;
-	ClickRunner m_clicker2;
-	ClickRunner m_clicker3;
+	vector<ClickRunner*> m_clicker_arr;
 	RecieverRunner m_reciever;
 	vector<CString> m_key_arr;
 

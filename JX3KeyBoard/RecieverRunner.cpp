@@ -12,7 +12,7 @@ RecieverRunner::~RecieverRunner()
 	
 }
 
-#define RECORD_INTERVAL 100 //ms
+#define RECORD_INTERVAL 30 //ms
 void RecieverRunner::Run()
 {
 	DWORD _lastVal = 0;
@@ -53,9 +53,8 @@ void RecieverRunner::Run()
 			{
 				*m_pause_click = false;
 			}
-			printf("%d %c", relKey, relKey);
 			_curNextRecordTime = _curNextRecordTime + RECORD_INTERVAL;
 		}
-		Sleep(RECORD_INTERVAL/2);
+		Sleep(RECORD_INTERVAL / 2);
 	}
 }
